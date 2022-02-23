@@ -1,0 +1,149 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Api To Send Messages with whatsapp",
+    "version": "1.0.0",
+    "title": "Send Message API",
+    "contact": {
+      "email": "cribeiro@flowbix.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "virtserver.swaggerhub.com",
+  "basePath": "/Flowbix/Send-Api-Message/1.0.0",
+  "tags": [
+    {
+      "name": "messages",
+      "description": "Rotas para envio de mensagens"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/zapi/sendMessage": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "enviar uma mensagem com o primeiro número disponível",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "message data",
+            "description": "conteúdo necessário pra enviar uma mensagem onde o grupo pode ser o número do usuário ou o grupoID que irá receber a mensagem",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/message data"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mensagem enviada",
+            "schema": {
+              "$ref": "#/definitions/inline_response_200"
+            }
+          },
+          "400": {
+            "description": "campo inválido ou não informado",
+            "schema": {
+              "$ref": "#/definitions/inline_response_400"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "inline_response_200": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "mensagem enviada coms sucesso!"
+        }
+      }
+    },
+    "message data": {
+      "type": "object",
+      "required": [
+        "grupo",
+        "msg"
+      ],
+      "properties": {
+        "msg": {
+          "type": "string",
+          "example": "opa, sou uma mensagem"
+        },
+        "grupo": {
+          "type": "string",
+          "example": "5516993353001-1629928252"
+        }
+      }
+    },
+    "inline_response_400_validation": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "$ref": "#/definitions/inline_response_400_validation_body"
+        }
+      }
+    },
+    "inline_response_400_validation_body": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "example": "body"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "field1",
+              "field2",
+              "fieldN"
+            ]
+          }
+        },
+        "message": {
+          "type": "string",
+          "example": "\"field\" is required"
+        }
+      }
+    },
+    "inline_response_400": {
+      "type": "object",
+      "properties": {
+        "statusCode": {
+          "type": "number",
+          "example": 400
+        },
+        "error": {
+          "type": "string",
+          "example": "Bad Request"
+        },
+        "message": {
+          "type": "string",
+          "example": "Validation failed"
+        },
+        "validation": {
+          "$ref": "#/definitions/inline_response_400_validation"
+        }
+      }
+    }
+  },
+  "responses": {
+    "CelebrateError": {
+      "description": "campo inválido ou não informado",
+      "schema": {
+        "$ref": "#/definitions/inline_response_400"
+      }
+    }
+  }
+}
