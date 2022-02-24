@@ -14,6 +14,14 @@ function sendMessage(routes: Router) {
   }), sendMessageController.sendText)
 
   // send image
+  routes.post('/zapi/sendImage', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+      grupo: Joi.string().required(),
+      image: Joi.string().required(),
+      
+      msg: Joi.string().optional()
+    })
+  }), sendMessageController.sendImage)
 
   // send document
 }

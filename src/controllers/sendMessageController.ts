@@ -69,13 +69,6 @@ export default class SendMessageController {
     const database_name = 'notification_manager'
     const database_port = Number(process.env.DATABASE_PORT)
 
-    console.log('database access: ', {
-      host: database_host,
-      user: database_user,
-      password: database_password,
-      port: database_port
-    })
-
     let connection = mysql.createConnection({
       host: database_host,
       user: database_user,
@@ -107,6 +100,18 @@ export default class SendMessageController {
     // // create necessary tables
     await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `grupo_paulo` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
     await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp_apis` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `celular_api` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`), KEY `what_apis` (`grupo_winzap`,`celular_api`,`date_min`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
+  }
+
+  // configuration to date
+  // date have a format "YYYY-MM-DD HH:mm:ss"
+  private getActualDayDate = () => {
+    momentTimezone.locale('pt-br')
+    const date = momentTimezone()
+      .tz('America/Sao_Paulo')
+      .format('YYYY-MM-DD HH:mm:ss')
+
+    const dateDay = date.split(' ')[0]
+    return dateDay
   }
 
   /**
@@ -184,6 +189,30 @@ export default class SendMessageController {
     return result
   }
 
+  private sendImageWithZApi = async (
+    instance: string,
+    token: string,
+
+    data: {
+      phone: string,
+      image: string,
+      caption?: string
+    }
+  ) => {
+    const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-image`
+    let result = false
+
+    await axios.post(url, data)
+      .then((r) => {
+        result = true
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+    return result
+  }
+
   /**
    *  @param {String} receiverNumber number of user to receive message
    *  @param {String} message message to send to user
@@ -216,6 +245,37 @@ export default class SendMessageController {
     }
   }
 
+  private sendImageAPI = async (
+    connection: mysql.Connection,
+    dayDate: string,
+
+    data: {
+      phone: string,
+      image: string,
+      caption?: string
+    }
+  ) => {
+    for (let index = 0; index < this.numbersAPI.length; index++) {
+      const numberAPI = this.numbersAPI[index]
+      
+      await this.saveSendApis(connection, numberAPI.number, data.phone, dayDate)
+      const status = await this.getStatusToZApiInstance(this.numbersAPI[index].instance, this.numbersAPI[index].token)
+      
+      if (status) {
+        const sent = await this.sendImageWithZApi(
+          this.numbersAPI[index].instance,
+          this.numbersAPI[index].token, 
+          data
+        )
+      
+        console.log('ok')
+        if (sent) {
+          break
+        }
+      }
+    }
+  }
+
   private query = async (connection: mysql.Connection, sql: string) => {
     return await new Promise((resolve, reject) => {
       return connection.query(sql, (err, result, fields) => {
@@ -236,26 +296,7 @@ export default class SendMessageController {
     })
   }
 
-  public sendText = async (req: Request, res: Response) => {
-    const { msg, grupo } = req.body as { msg: string, grupo: string }
-    const paulo = ''
-
-    // set database timezone and header dataset
-    // date_default_timezone_set('America/Sao_Paulo');
-    // header('Content-type: text/html; charset=utf-8');
-
-    const connection = await this.configureAndGetConnection()
-    
-    await this.createNecessaryTables(connection)
-    
-    // // configuration to date
-    // date have a format "YYYY-MM-DD HH:mm:ss"
-    momentTimezone.locale('pt-br')
-    const date = momentTimezone()
-      .tz('America/Sao_Paulo')
-      .format('YYYY-MM-DD HH:mm:ss')
-    const dateDay = date.split(' ')[0]
-
+  private updateActualDate = async (connection: mysql.Connection, grupo: string, paulo: string, dateDay: string) => {
     // search by day
     const searchByDay = await this.query(
       connection, 
@@ -268,6 +309,19 @@ export default class SendMessageController {
     } else {
       await this.query(connection, `INSERT INTO notification_whatsapp (grupo_winzap,grupo_paulo,qtd,date_min,update_date) VALUES('${grupo}','${paulo}',1,'${dateDay}', UNIX_TIMESTAMP(NOW()))`)
     }
+  }
+
+  public sendText = async (req: Request, res: Response) => {
+    const { msg, grupo } = req.body as { msg: string, grupo: string }
+    const paulo = ''
+
+    const connection = await this.configureAndGetConnection()
+    
+    await this.createNecessaryTables(connection)
+    
+    const dateDay = this.getActualDayDate()
+
+    await this.updateActualDate(connection, grupo, paulo, dateDay)
     
     await this.sendMessage(grupo, msg, connection, dateDay)
 
@@ -277,6 +331,25 @@ export default class SendMessageController {
   }
 
   public sendImage = async (req: Request, res: Response) => {
+    const { msg, grupo, image } = req.body as { grupo: string, msg?: string, image: string }
+
+    const connection = await this.configureAndGetConnection()
     
+    await this.createNecessaryTables(connection)
+
+    const dateDay = this.getActualDayDate()
+
+    await this.updateActualDate(connection, grupo, '', dateDay)
+
+    const isHaveMessage = !!msg
+    if (isHaveMessage) {
+      await this.sendImageAPI(connection, dateDay, { phone: grupo, image, caption: msg })
+    } else {
+      await this.sendImageAPI(connection, dateDay, { phone: grupo, image })
+    }
+
+    return res.status(200).json({
+      message: 'imagem enviada com sucesso!'
+    })
   }
 }
