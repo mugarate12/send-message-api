@@ -61,6 +61,47 @@ export default class SendMessageController {
     return formattedNumber
   }
 
+  private configureAndGetConnection = async () => {
+    // database settings
+    const database_user = String(process.env.DATABASE_USER)
+    const database_password = String(process.env.DATABASE_PASSWORD) //'N6btXue8HbseDV'
+    const database_host = String(process.env.DATABASE_HOST)
+    const database_name = 'notification_manager'
+    const database_port = Number(process.env.DATABASE_PORT)
+
+    let connection = mysql.createConnection({
+      host: database_host,
+      user: database_user,
+      password: database_password,
+      port: database_port
+    })
+
+    // create database if not exists
+    await this.query(connection, `CREATE DATABASE IF NOT EXISTS ${database_name}`)
+    await this.query(connection, `CREATE SCHEMA IF NOT EXISTS ${database_name}`)
+
+    connection = mysql.createConnection({
+      host: database_host,
+      user: database_user,
+      password: database_password,
+      database: database_name,
+      port: database_port
+    })
+
+    // await this.execute(connection, "SET NAMES 'utf8'")
+    // await this.execute(connection, "SET character_set_connection='utf8'")
+    // await this.execute(connection, "SET character_set_client='utf8'")
+    // await this.execute(connection, "SET character_set_results='utf8'")
+
+    return connection
+  }
+
+  private createNecessaryTables = async (connection: mysql.Connection) => {
+    // // create necessary tables
+    await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `grupo_paulo` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
+    await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp_apis` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `celular_api` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`), KEY `what_apis` (`grupo_winzap`,`celular_api`,`date_min`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
+  }
+
   /**
    * @param {String} number api number
    * @param {String} receiverNumber number or group id to receive message
@@ -188,7 +229,7 @@ export default class SendMessageController {
     })
   }
 
-  public send = async (req: Request, res: Response) => {
+  public sendText = async (req: Request, res: Response) => {
     const { msg, grupo } = req.body as { msg: string, grupo: string }
     const paulo = ''
 
@@ -196,41 +237,9 @@ export default class SendMessageController {
     // date_default_timezone_set('America/Sao_Paulo');
     // header('Content-type: text/html; charset=utf-8');
 
-    // database settings
-    const database_user = String(process.env.DATABASE_USER)
-    const database_password = String(process.env.DATABASE_PASSWORD) //'N6btXue8HbseDV'
-    const database_host = String(process.env.DATABASE_HOST)
-    const database_name = 'notification_manager'
-    const database_port = Number(process.env.DATABASE_PORT)
-
-    let connection = mysql.createConnection({
-      host: database_host,
-      user: database_user,
-      // password: database_password,
-      port: database_port
-    })
+    const connection = await this.configureAndGetConnection()
     
-    // create database if not exists
-    await this.query(connection, `CREATE DATABASE IF NOT EXISTS ${database_name}`)
-    await this.query(connection, `CREATE SCHEMA IF NOT EXISTS ${database_name}`)
-    
-    connection = mysql.createConnection({
-      host: database_host,
-      user: database_user,
-      // password: database_password,
-      database: database_name,
-      port: database_port
-    })
-    
-    
-    // await this.execute(connection, "SET NAMES 'utf8'")
-    // await this.execute(connection, "SET character_set_connection='utf8'")
-    // await this.execute(connection, "SET character_set_client='utf8'")
-    // await this.execute(connection, "SET character_set_results='utf8'")
-    
-    // // create necessary tables
-    await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `grupo_paulo` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
-    await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp_apis` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `celular_api` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`), KEY `what_apis` (`grupo_winzap`,`celular_api`,`date_min`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
+    await this.createNecessaryTables(connection)
     
     // // configuration to date
     // date have a format "YYYY-MM-DD HH:mm:ss"
@@ -256,7 +265,11 @@ export default class SendMessageController {
     await this.sendMessage(grupo, msg, connection, dateDay)
 
     return res.status(200).json({
-      message: 'mensagem enviada coms sucesso!'
+      message: 'mensagem enviada com sucesso!'
     })
+  }
+
+  public sendImage = async (req: Request, res: Response) => {
+    
   }
 }
