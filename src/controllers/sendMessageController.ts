@@ -1,6 +1,6 @@
 import { Request, Response } from 'express'
 import axios from 'axios'
-import mysql from 'mysql'
+import mysql from 'mysql2'
 import momentTimezone from 'moment-timezone'
 import 'moment/locale/pt-br'
 import dotenv from 'dotenv'
@@ -99,7 +99,6 @@ export default class SendMessageController {
     }>(url)
       .then(response => {
         const data = response.data
-        console.log(response.data)
         
         if (data.connected && data.smartphoneConnected) {
           status = true
@@ -128,7 +127,6 @@ export default class SendMessageController {
 
     await axios.post(url, data)
       .then((r) => {
-        console.log(r.data)
         result = true
       })
       .catch(error => {
@@ -152,11 +150,9 @@ export default class SendMessageController {
     for (let index = 0; index < this.numbersAPI.length; index++) {
       const numberAPI = this.numbersAPI[index]
       
-      console.log('número', numberAPI.number)
       await this.saveSendApis(connection, numberAPI.number, receiverNumber, dayDate)
       const status = await this.getStatusToZApiInstance(this.numbersAPI[index].instance, this.numbersAPI[index].token)
       
-      console.log('status', status)
       if (status) {
         const messageSent = await this.sendMessageWithZApi(
           this.numbersAPI[index].instance, 
@@ -175,6 +171,16 @@ export default class SendMessageController {
   private query = async (connection: mysql.Connection, sql: string) => {
     return await new Promise((resolve, reject) => {
       return connection.query(sql, (err, result, fields) => {
+        if (err) reject(err)
+        
+        resolve(result)
+      })
+    })
+  }
+  
+  private execute = async (connection: mysql.Connection, sql: string) => {
+    return await new Promise((resolve, reject) => {
+      return connection.execute(sql, (err, result, fields) => {
         if (err) reject(err)
         
         resolve(result)
@@ -216,16 +222,17 @@ export default class SendMessageController {
       port: database_port
     })
     
-    await this.query(connection, "SET NAMES 'utf8'")
-    await this.query(connection, 'SET character_set_connection=utf8')
-    await this.query(connection, 'SET character_set_client=utf8')
-    await this.query(connection, 'SET character_set_results=utf8')
     
-    // create necessary tables
+    // await this.execute(connection, "SET NAMES 'utf8'")
+    // await this.execute(connection, "SET character_set_connection='utf8'")
+    // await this.execute(connection, "SET character_set_client='utf8'")
+    // await this.execute(connection, "SET character_set_results='utf8'")
+    
+    // // create necessary tables
     await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `grupo_paulo` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
     await this.query(connection, 'CREATE TABLE IF NOT EXISTS `notification_whatsapp_apis` (`id` int(11) NOT NULL AUTO_INCREMENT, `grupo_winzap` varchar(300) DEFAULT NULL, `celular_api` varchar(300) DEFAULT NULL, `qtd` int(6) DEFAULT NULL, `date_min` varchar(300) DEFAULT NULL, `update_date` int(11) NOT NULL, PRIMARY KEY (`id`), KEY `what_apis` (`grupo_winzap`,`celular_api`,`date_min`)) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=latin1')
     
-    // configuration to date
+    // // configuration to date
     // date have a format "YYYY-MM-DD HH:mm:ss"
     momentTimezone.locale('pt-br')
     const date = momentTimezone()

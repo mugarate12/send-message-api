@@ -25,9 +25,11 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
+    "iconv-lite": "^0.6.3",
     "moment": "^2.29.1",
     "moment-timezone": "^0.5.34",
     "mysql": "^2.18.1",
+    "mysql2": "^2.3.3",
     "run-script-os": "^1.1.6",
     "swagger-ui-express": "^4.3.0"
   },
