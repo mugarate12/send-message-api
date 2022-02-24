@@ -99,6 +99,7 @@ export default class SendMessageController {
     }>(url)
       .then(response => {
         const data = response.data
+        console.log(response.data)
         
         if (data.connected && data.smartphoneConnected) {
           status = true
@@ -126,7 +127,8 @@ export default class SendMessageController {
     let result = false
 
     await axios.post(url, data)
-      .then(() => {
+      .then((r) => {
+        console.log(r.data)
         result = true
       })
       .catch(error => {
@@ -150,13 +152,15 @@ export default class SendMessageController {
     for (let index = 0; index < this.numbersAPI.length; index++) {
       const numberAPI = this.numbersAPI[index]
       
+      console.log('número', numberAPI.number)
       await this.saveSendApis(connection, numberAPI.number, receiverNumber, dayDate)
-      const status = await this.getStatusToZApiInstance(this.numbersAPI[0].instance, this.numbersAPI[0].token)
+      const status = await this.getStatusToZApiInstance(this.numbersAPI[index].instance, this.numbersAPI[index].token)
       
+      console.log('status', status)
       if (status) {
         const messageSent = await this.sendMessageWithZApi(
-          this.numbersAPI[0].instance, 
-          this.numbersAPI[0].token, 
+          this.numbersAPI[index].instance, 
+          this.numbersAPI[index].token, 
           receiverNumber.includes('(') ? this.formatNumber(receiverNumber) : receiverNumber,
           message
         )
@@ -232,7 +236,7 @@ export default class SendMessageController {
     // search by day
     const searchByDay = await this.query(
       connection, 
-      `SELECT * FROM notification_whatsapp WHERE grupo_winzap = '${grupo}'  AND grupo_paulo= '${paulo}' and date_min ='${dateDay}'`
+      `SELECT * FROM notification_whatsapp WHERE grupo_winzap = '${grupo}' AND grupo_paulo='${paulo}' and date_min ='${dateDay}'`
     )
 
     // update count

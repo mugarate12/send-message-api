@@ -13,16 +13,22 @@ RESTful API criada em NodeJS para envio de mensagens usando Zapi
 A instalação das ferramentas para Debian está descrita abaixo na sessão **[Instalação](#instalação)**
 
 - **[Node.js e NPM](https://www.nodejs.org/)** (suportadas versões: 10.x.x)
+- **[Git](https://git-scm.com/)**
 - **[PM2](https://pm2.io/docs/plus/overview/)**
 
 ## Instalação
+
+### Git
+```bash
+apt-get install git-all
+```
 
 ### NodeJS and NPM
 ```bash
 curl -fsSL https://deb.nodesource.com/setup_17.x | bash -
 ```
 ```bash
-apt-get install -y nodejs
+apt-get install -y nodejs npm
 ```
 
 ### Instalação PM2
