@@ -69,6 +69,13 @@ export default class SendMessageController {
     const database_name = 'notification_manager'
     const database_port = Number(process.env.DATABASE_PORT)
 
+    console.log('database access: ', {
+      host: database_host,
+      user: database_user,
+      password: database_password,
+      port: database_port
+    })
+
     let connection = mysql.createConnection({
       host: database_host,
       user: database_user,
