@@ -206,7 +206,7 @@ export default class SendMessageController {
     let connection = mysql.createConnection({
       host: database_host,
       user: database_user,
-      password: database_password,
+      // password: database_password,
       port: database_port
     })
     
@@ -217,7 +217,7 @@ export default class SendMessageController {
     connection = mysql.createConnection({
       host: database_host,
       user: database_user,
-      password: database_password,
+      // password: database_password,
       database: database_name,
       port: database_port
     })
