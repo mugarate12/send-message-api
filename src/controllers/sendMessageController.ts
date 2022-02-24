@@ -212,6 +212,33 @@ export default class SendMessageController {
 
     return result
   }
+  
+  private sendLinkWithZApi = async (
+    instance: string,
+    token: string,
+
+    data: {
+      phone: string,
+      message: string,
+      image: string,
+      linkUrl: string,
+      title: string,
+      linkDescription: string
+    }
+  ) => {
+    const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-link`
+    let result = false
+
+    await axios.post(url, data)
+      .then((r) => {
+        result = true
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+    return result
+  }
 
   /**
    *  @param {String} receiverNumber number of user to receive message
@@ -268,7 +295,39 @@ export default class SendMessageController {
           data
         )
       
-        console.log('ok')
+        if (sent) {
+          break
+        }
+      }
+    }
+  }
+  
+  private sendLinkAPI = async (
+    connection: mysql.Connection,
+    dayDate: string,
+
+    data: {
+      phone: string,
+      message: string,
+      image: string,
+      linkUrl: string,
+      title: string,
+      linkDescription: string
+    }
+  ) => {
+    for (let index = 0; index < this.numbersAPI.length; index++) {
+      const numberAPI = this.numbersAPI[index]
+      
+      await this.saveSendApis(connection, numberAPI.number, data.phone, dayDate)
+      const status = await this.getStatusToZApiInstance(this.numbersAPI[index].instance, this.numbersAPI[index].token)
+      
+      if (status) {
+        const sent = await this.sendLinkWithZApi(
+          this.numbersAPI[index].instance,
+          this.numbersAPI[index].token, 
+          data
+        )
+      
         if (sent) {
           break
         }
@@ -351,5 +410,41 @@ export default class SendMessageController {
     return res.status(200).json({
       message: 'imagem enviada com sucesso!'
     })
+  }
+
+  public sendLink = async (req: Request, res: Response) => {
+    const { phone, message, image, linkUrl, title, linkDescription } = req.body as {
+      phone: string,
+      message: string,
+      image: string,
+      linkUrl: string,
+      title: string,
+      linkDescription: string
+    }
+
+    const haveLinkHttps = message.includes('https://')
+    const haveLinkHttp = message.includes('http://') 
+    
+    if (haveLinkHttps || haveLinkHttp) {
+      const connection = await this.configureAndGetConnection()
+    
+      await this.createNecessaryTables(connection)
+
+      const dateDay = this.getActualDayDate()
+
+      await this.updateActualDate(connection, phone, '', dateDay)
+
+      await this.sendLinkAPI(connection, dateDay, { phone, message, image, linkUrl, title, linkDescription })
+
+      return res.status(200).json({
+        message: 'link enviado com sucesso!'
+      })
+    } else {
+      return res.status(400).json({
+        error: {
+          message: 'a mensagem do link precisa conter o link ao final da mensagem'
+        }
+      })
+    }
   }
 }
