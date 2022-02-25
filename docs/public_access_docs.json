@@ -13,7 +13,7 @@
     }
   },
   "host": "virtserver.swaggerhub.com",
-  "basePath": "/Flowbix/Send-Api-Message/1.0.0",
+  "basePath": "/mateus-Cardoso/Send-Api-Message/1.0.0",
   "tags": [
     {
       "name": "messages",
@@ -56,15 +56,240 @@
           }
         }
       }
+    },
+    "/zapi/sendImage": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "enviar uma mensagem com o primeiro número disponível",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "message data",
+            "description": "conteúdo necessário pra enviar uma imagem onde o grupo pode ser o número do usuário ou o grupoID que irá receber a mensagem E a image deve ser o link ou o Base64 dela",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/message data_1"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mensagem enviada",
+            "schema": {
+              "$ref": "#/definitions/inline_response_200_1"
+            }
+          },
+          "400": {
+            "description": "campo inválido ou não informado",
+            "schema": {
+              "$ref": "#/definitions/inline_response_400"
+            }
+          }
+        }
+      }
+    },
+    "/zapi/sendDocument": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "enviar uma mensagem com o primeiro número disponível",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "message data",
+            "description": "conteúdo necessário pra enviar uma imagem onde o grupo pode ser o número do usuário ou o grupoID que irá receber a mensagem E a image deve ser o link ou o Base64 dela",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/message data_2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mensagem enviada",
+            "schema": {
+              "$ref": "#/definitions/inline_response_200_2"
+            }
+          },
+          "400": {
+            "description": "campo inválido ou não informado",
+            "schema": {
+              "$ref": "#/definitions/inline_response_400"
+            }
+          }
+        }
+      }
+    },
+    "/zapi/sendVideo": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "enviar uma mensagem com o primeiro número disponível",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "message data",
+            "description": "conteúdo necessário pra enviar uma imagem onde o grupo pode ser o número do usuário ou o grupoID que irá receber a mensagem E a image deve ser o link ou o Base64 dela",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/message data_3"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mensagem enviada",
+            "schema": {
+              "$ref": "#/definitions/inline_response_200_2"
+            }
+          },
+          "400": {
+            "description": "campo inválido ou não informado",
+            "schema": {
+              "$ref": "#/definitions/inline_response_400"
+            }
+          }
+        }
+      }
+    },
+    "/zapi/sendLink": {
+      "post": {
+        "tags": [
+          "messages"
+        ],
+        "summary": "enviar uma mensagem com o primeiro número disponível",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "message data",
+            "description": "conteúdo necessário pra enviar um link onde o grupo pode ser o número do usuário ou o grupoID que irá receber a mensagem",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/message data_4"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "mensagem enviada",
+            "schema": {
+              "$ref": "#/definitions/inline_response_200_3"
+            }
+          },
+          "400": {
+            "description": "campo inválido ou não informado",
+            "schema": {
+              "$ref": "#/definitions/inline_response_400"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "message data_2": {
+      "type": "object",
+      "required": [
+        "document",
+        "extension",
+        "fileName",
+        "grupo"
+      ],
+      "properties": {
+        "fileName": {
+          "type": "string",
+          "example": "Meu PDF"
+        },
+        "extension": {
+          "type": "string",
+          "example": ".pdf"
+        },
+        "document": {
+          "type": "string",
+          "example": "https://expoforest.com.br/wp-content/uploads/2017/05/exemplo.pdf"
+        },
+        "grupo": {
+          "type": "string",
+          "example": "5516993353001-1629928252"
+        }
+      }
+    },
+    "message data_3": {
+      "type": "object",
+      "required": [
+        "grupo",
+        "video"
+      ],
+      "properties": {
+        "video": {
+          "type": "string",
+          "example": "https://file-examples-com.github.io/uploads/2017/04/file_example_MP4_480_1_5MG.mp4"
+        },
+        "grupo": {
+          "type": "string",
+          "example": "5516993353001-1629928252"
+        }
+      }
+    },
+    "message data_1": {
+      "type": "object",
+      "required": [
+        "grupo",
+        "image",
+        "msg"
+      ],
+      "properties": {
+        "image": {
+          "type": "string",
+          "example": "https://www.z-api.io/wp-content/themes/z-api/dist/images/logo.svg"
+        },
+        "msg": {
+          "type": "string",
+          "example": "opa, sou uma mensagem"
+        },
+        "grupo": {
+          "type": "string",
+          "example": "5516993353001-1629928252"
+        }
+      }
+    },
+    "inline_response_200_1": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "imagem enviada com sucesso!"
+        }
+      }
+    },
     "inline_response_200": {
       "type": "object",
       "properties": {
         "message": {
           "type": "string",
-          "example": "mensagem enviada coms sucesso!"
+          "example": "mensagem enviada com sucesso!"
+        }
+      }
+    },
+    "inline_response_200_2": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "documento enviada com sucesso!"
+        }
+      }
+    },
+    "inline_response_200_3": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "example": "link enviado com sucesso!"
         }
       }
     },
@@ -90,6 +315,43 @@
       "properties": {
         "body": {
           "$ref": "#/definitions/inline_response_400_validation_body"
+        }
+      }
+    },
+    "message data_4": {
+      "type": "object",
+      "required": [
+        "grupo",
+        "image",
+        "linkDescription",
+        "linkUrl",
+        "msg",
+        "title"
+      ],
+      "properties": {
+        "linkDescription": {
+          "type": "string",
+          "example": "Integração com o whatsapp"
+        },
+        "linkUrl": {
+          "type": "string",
+          "example": "https://z-api.io"
+        },
+        "title": {
+          "type": "string",
+          "example": "Z-API"
+        },
+        "image": {
+          "type": "string",
+          "example": "https://www.z-api.io/wp-content/themes/z-api/dist/images/logo.svg"
+        },
+        "msg": {
+          "type": "string",
+          "example": "opa, sou uma mensagem"
+        },
+        "grupo": {
+          "type": "string",
+          "example": "5516993353001-1629928252"
         }
       }
     },
