@@ -264,6 +264,29 @@ export default class SendMessageController {
 
     return result
   }
+  
+  private sendVideoWithZApi = async (
+    instance: string,
+    token: string,
+
+    data: {
+      phone: string,
+      video: string
+    }
+  ) => {
+    const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-video`
+    let result = false
+
+    await axios.post(url, data)
+      .then((r) => {
+        result = true
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+    return result
+  }
 
   /**
    *  @param {String} receiverNumber number of user to receive message
@@ -390,6 +413,35 @@ export default class SendMessageController {
       }
     }
   }
+  
+  private sendVideoAPI = async (
+    connection: mysql.Connection,
+    dayDate: string,
+
+    data: {
+      phone: string,
+      video: string
+    }
+  ) => {
+    for (let index = 0; index < this.numbersAPI.length; index++) {
+      const numberAPI = this.numbersAPI[index]
+      
+      await this.saveSendApis(connection, numberAPI.number, data.phone, dayDate)
+      const status = await this.getStatusToZApiInstance(this.numbersAPI[index].instance, this.numbersAPI[index].token)
+      
+      if (status) {
+        const sent = await this.sendVideoWithZApi(
+          this.numbersAPI[index].instance,
+          this.numbersAPI[index].token, 
+          data
+        )
+      
+        if (sent) {
+          break
+        }
+      }
+    }
+  }
 
   private query = async (connection: mysql.Connection, sql: string) => {
     return await new Promise((resolve, reject) => {
@@ -469,8 +521,8 @@ export default class SendMessageController {
   }
 
   public sendLink = async (req: Request, res: Response) => {
-    const { phone, message, image, linkUrl, title, linkDescription } = req.body as {
-      phone: string,
+    const { grupo, message, image, linkUrl, title, linkDescription } = req.body as {
+      grupo: string,
       message: string,
       image: string,
       linkUrl: string,
@@ -488,9 +540,9 @@ export default class SendMessageController {
 
       const dateDay = this.getActualDayDate()
 
-      await this.updateActualDate(connection, phone, '', dateDay)
+      await this.updateActualDate(connection, grupo, '', dateDay)
 
-      await this.sendLinkAPI(connection, dateDay, { phone, message, image, linkUrl, title, linkDescription })
+      await this.sendLinkAPI(connection, dateDay, { phone: grupo, message, image, linkUrl, title, linkDescription })
 
       return res.status(200).json({
         message: 'link enviado com sucesso!'
@@ -529,6 +581,30 @@ export default class SendMessageController {
 
     return res.status(200).json({
       message: 'documento enviado com sucesso!'
+    })
+  }
+  
+  public sendVideo = async (req: Request, res: Response) => {
+    const { grupo, video } = req.body as { 
+      grupo: string, 
+      video: string
+    }
+
+    const connection = await this.configureAndGetConnection()
+    
+    await this.createNecessaryTables(connection)
+
+    const dateDay = this.getActualDayDate()
+
+    await this.updateActualDate(connection, grupo, '', dateDay)
+
+    await this.sendVideoAPI(connection, dateDay, {
+      phone: grupo,
+      video
+    })
+
+    return res.status(200).json({
+      message: 'vídeo enviado com sucesso!'
     })
   }
 }

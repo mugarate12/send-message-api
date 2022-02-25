@@ -27,7 +27,7 @@ function sendMessage(routes: Router) {
   // send link
   routes.post('/zapi/sendLink', celebrate({
     [Segments.BODY]: Joi.object().keys({
-      phone: Joi.string().required(),
+      grupo: Joi.string().required(),
       message: Joi.string().required(),
       image: Joi.string().required(),
       linkUrl: Joi.string().required(),
@@ -47,7 +47,12 @@ function sendMessage(routes: Router) {
   }), sendMessageController.sendDocument)
 
   // send vídeo
-  
+  routes.post('/zapi/sendVideo', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+      grupo: Joi.string().required(),
+      video: Joi.string().required()
+    })
+  }), sendMessageController.sendVideo)
 }
 
 export default sendMessage
