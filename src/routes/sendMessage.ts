@@ -37,6 +37,17 @@ function sendMessage(routes: Router) {
   }), sendMessageController.sendLink)
 
   // send document
+  routes.post('/zapi/sendDocument', celebrate({
+    [Segments.BODY]: Joi.object().keys({
+      grupo: Joi.string().required(),
+      document: Joi.string().required(),
+      extension: Joi.string().required(),
+      fileName: Joi.string().required()
+    })
+  }), sendMessageController.sendDocument)
+
+  // send vídeo
+  
 }
 
 export default sendMessage

@@ -239,6 +239,31 @@ export default class SendMessageController {
 
     return result
   }
+  
+  private sendDocumentWithZApi = async (
+    instance: string,
+    token: string,
+
+    data: {
+      phone: string,
+      document: string,
+      extension: string,
+      fileName: string
+    }
+  ) => {
+    const url = `https://api.z-api.io/instances/${instance}/token/${token}/send-document/${data.extension}`
+    let result = false
+
+    await axios.post(url, { phone: data.phone, document: data.document, fileName: data.fileName })
+      .then((r) => {
+        result = true
+      })
+      .catch(error => {
+        console.log(error)
+      })
+
+    return result
+  }
 
   /**
    *  @param {String} receiverNumber number of user to receive message
@@ -323,6 +348,37 @@ export default class SendMessageController {
       
       if (status) {
         const sent = await this.sendLinkWithZApi(
+          this.numbersAPI[index].instance,
+          this.numbersAPI[index].token, 
+          data
+        )
+      
+        if (sent) {
+          break
+        }
+      }
+    }
+  }
+  
+  private sendDocumentAPI = async (
+    connection: mysql.Connection,
+    dayDate: string,
+
+    data: {
+      phone: string,
+      document: string,
+      extension: string,
+      fileName: string
+    }
+  ) => {
+    for (let index = 0; index < this.numbersAPI.length; index++) {
+      const numberAPI = this.numbersAPI[index]
+      
+      await this.saveSendApis(connection, numberAPI.number, data.phone, dayDate)
+      const status = await this.getStatusToZApiInstance(this.numbersAPI[index].instance, this.numbersAPI[index].token)
+      
+      if (status) {
+        const sent = await this.sendDocumentWithZApi(
           this.numbersAPI[index].instance,
           this.numbersAPI[index].token, 
           data
@@ -446,5 +502,33 @@ export default class SendMessageController {
         }
       })
     }
+  }
+
+  public sendDocument = async (req: Request, res: Response) => {
+    const { grupo, document, extension, fileName } = req.body as { 
+      grupo: string, 
+      document: string,
+      extension: string, 
+      fileName: string
+    }
+
+    const connection = await this.configureAndGetConnection()
+    
+    await this.createNecessaryTables(connection)
+
+    const dateDay = this.getActualDayDate()
+
+    await this.updateActualDate(connection, grupo, '', dateDay)
+
+    await this.sendDocumentAPI(connection, dateDay, {
+      phone: grupo,
+      document,
+      extension,
+      fileName
+    })
+
+    return res.status(200).json({
+      message: 'documento enviado com sucesso!'
+    })
   }
 }
