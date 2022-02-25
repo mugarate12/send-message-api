@@ -104,6 +104,9 @@ export default class SendMessageController {
 
   // configuration to date
   // date have a format "YYYY-MM-DD HH:mm:ss"
+  /**
+   * @description return data in format YYYY-MM-DD
+   */
   private getActualDayDate = () => {
     momentTimezone.locale('pt-br')
     const date = momentTimezone()
